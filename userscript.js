@@ -10,10 +10,11 @@
 // ==/UserScript==
 
 ;(async function ($, wkof) {
+
     // Initiate WKOF
     await confirm_wkof()
     wkof.include('Menu,Settings')
-    wkof.ready('Settings,Menu')
+    wkof.ready('Settings,Menu,Apiv2')
 
     // Makes sure that WKOF is installed
     async function confirm_wkof() {
@@ -27,4 +28,24 @@
             }
         }
     }
+
+    console.log("I am loaded")
+
+    var countdown = 10;
+    var setTime = 10;
+
+    var timer = setInterval(function(){
+        if (countdown <= 0) {
+            console.log("times up.");
+        }
+
+        countdown -= 1;
+    }, setTime * 100);
+
+    // Detect change in SRS
+    window.addEventListener('didAnswerQuestion', (e) => {
+        countdown = 10;
+    })
+
+
 })(window.jQuery, window.wkof)
