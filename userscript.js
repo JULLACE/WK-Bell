@@ -13,9 +13,10 @@
 
 ;(async function ($, wkof) {
     let settings = {}
-    let timeUntil
-    var href = window.location.pathname
+    const href = window.location.pathname
 
+    let time
+    let countdown
 
     // Script info
     const script_id = 'wakeup_bell'
@@ -24,7 +25,7 @@
     // Initiate WKOF
     await confirm_wkof()
     wkof.include('Settings,Menu')
-    wkof.ready('Settings,Menu').then(load_settings).then(install_menu)
+    wkof.ready('Settings,Menu').then(load_settings).then(install_menu).then(updateSettings)
 
     // Makes sure that WKOF is installed
     async function confirm_wkof() {
@@ -42,8 +43,9 @@
     // Load WKOF settings
     async function load_settings() {
         const defaults = {
-            time: 15
+            timeUntil: 10
         }
+
         settings = await wkof.Settings.load(script_id, defaults)
         return settings
     }
@@ -64,13 +66,13 @@
         const config = {
             script_id,
             title: script_name,
-            on_save: () => {},
+            on_save: updateSettings,
             content: {
-                bell: {
+                timeUntil: {
                     type: 'number',
-                    default: 15,
+                    default: 10,
                     label: 'Timer duration',
-                    hover_tip: 'Duration until warning timer will ring (5 seconds minimum)',
+                    hover_tip: 'Duration until warning timer will ring (5 seconds min.)',
                     min: 5
                 },
             },
@@ -78,25 +80,36 @@
         new wkof.Settings(config).open()
     }
 
-    console.log('i am loaded')
+
+    function updateSettings() {
+        time = settings.timeUntil
+        countdown = time
+    }
+
 
     // Only run script on review or extra study pages
     if (href.includes('review') || href.includes('extra_study')) {
-        console.log('script running')
 
-        var countdown = 15
-        setInterval(() => {
+        var myTimer = setInterval(() => {
             if (countdown == 0) {
                 console.log("times up.")
+                countdown -= 1
             }
-            countdown -= 1
-        }, 15 * 100)
+            else if (countdown > 0) {
+                countdown -= 1
+            }
 
-        // Detect change in SRS
+        }, 1000)
+
+        // Detect question answered
         window.addEventListener('didAnswerQuestion', (e) => {
-            countdown = 10
+            countdown = -1;
+        })
+
+        // Detect question changed
+        window.addEventListener('willShowNextQuestion', (e) => {
+            countdown = time
         })
     }
-
 
 })(window.jQuery, window.wkof)
