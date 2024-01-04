@@ -14,9 +14,11 @@
 ;(async function ($, wkof) {
     let settings = {}
     const href = window.location.pathname
-
+    let bellSound = new Audio("https://assets.mixkit.co/active_storage/sfx/113/113-preview.mp3")
+    
     let time
     let countdown
+    let wkTimer
 
     // Script info
     const script_id = 'wakeup_bell'
@@ -80,35 +82,41 @@
         new wkof.Settings(config).open()
     }
 
-
     function updateSettings() {
         time = settings.timeUntil
         countdown = time
     }
 
+    // Timer Functionality
+    function timerStart() {
+        wkTimer = setInterval(() => {
+            countdown -= 1
+            console.log(countdown)
 
-    // Only run script on review or extra study pages
+            if (countdown == 0) {
+                bellSound.play()
+                console.log("times up.")
+                countdown = time
+                timerEnd(wkTimer)
+            }
+        }, 1000)
+    }
+
+    function timerEnd() {
+        clearInterval(wkTimer)
+        wkTimer = null
+    }
+
+    // Only run timer on review or extra study pages
     if (href.includes('review') || href.includes('extra_study')) {
 
-        var myTimer = setInterval(() => {
-            if (countdown == 0) {
-                console.log("times up.")
-                countdown -= 1
-            }
-            else if (countdown > 0) {
-                countdown -= 1
-            }
-
-        }, 1000)
-
-        // Detect question answered
         window.addEventListener('didAnswerQuestion', (e) => {
-            countdown = -1;
+            timerEnd()
+            countdown = time
         })
 
-        // Detect question changed
         window.addEventListener('willShowNextQuestion', (e) => {
-            countdown = time
+            timerStart()
         })
     }
 
